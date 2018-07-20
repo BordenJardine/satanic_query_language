@@ -22,23 +22,56 @@ Dir["./app/**/*.rb"].each { |file| require file }
 #     - otherwise create one
 
 def process_csv(csv)
-  CSV.parse(csv, headers: true) do |row|
-    process(row.to_hash)
+  puts("start #{csv}")
+  CSV.foreach(csv, headers: true) do |row|
+    process_row(row.to_hash)
   end
 end
 
 def process_row(row)
-  data = {}
-  row.each_pair do |k,v|
-    next unless k
-    data[k.downcase] = v
-  end
+  access_note = create_access_notes(row)
+  citation = create_citation(row)
+  term = create_term(row, access_note, citation)
+end
 
+def create_access_notes(row)
+  text = row['Access Notes']
+  return unless text
+  access_notes = AccessNote.find_by(access_notes: text)
+  attrs = { access_notes: text }
+  if access_notes
+    access_notes.update_attributes(attrs)
+    return access_notes
+  else
+    return AccessNote.create(attrs)
+  end
+end
+
+def create_citation(row)
+  url = row['Citation']
+  return unless url
+  name = url.split('/')[2]
   attrs = {
-    term: row['term']
-    definition: row['definition']
+    url: url,
+    name: name,
   }
-  term = Term.find_by(term: term_txt)
+  citation = Citation.find_by(url: url)
+  if citation
+    citation.update_attributes(attrs)
+    return citation
+  else
+    return Citation.create(attrs)
+  end
+end
+
+def create_term(row, access_note, citation)
+  term = Term.find_by(term: row['Term'])
+  attrs = {
+    term: row['Term'],
+    definition: row['Definition'],
+    citation: citation,
+    access_note: access_note
+  }
   if term
     term.update_attributes(attrs)
   else
@@ -46,11 +79,11 @@ def process_row(row)
   end
 end
 
-def db_connect(env)
+def db_connect
   config = {
     adapter: 'mysql2',
     encoding: 'utf8',
-    database: 'webapp_test',
+    database: 'tst_glossary',
     username: 'root',
     password: 'newpassword',
     host: 'localhost',
@@ -58,3 +91,5 @@ def db_connect(env)
   ActiveRecord::Base.establish_connection(config)
 end
 
+db_connect()
+process_csv('./tst_glossary.csv')

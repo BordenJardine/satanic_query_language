@@ -1,41 +1,49 @@
 drop table if exists terms;
 create table terms(
-  term_id int not null auto_increment,
+  id int not null auto_increment,
   term varchar(256) not null,
-  definition varchar(256),
+  definition text,
   notes text,
   access_note_id int,
   citation_id int,
-  primary key (term_id)
+  primary key (id)
 );
 
 drop table if exists access_notes;
 create table access_notes(
-  access_note_id int not null auto_increment,
+  id int not null auto_increment,
   access_notes text,
-  primary key (access_note_id)
+  primary key (id)
 );
 
 drop table if exists citations;
 create table citations(
-  citation_id int not null auto_increment,
-  citation_name varchar(256),
-  citation_url varchar(256),
-  primary key (citation_id)
+  id int not null auto_increment,
+  name varchar(256),
+  url varchar(256),
+  primary key (id)
 );
 
 drop table if exists instances;
 create table instances(
-  instance_id int not null auto_increment,
-  document_name varchar(256),
-  document_url varchar(256),
-  primary key (instance_id)
+  id int not null auto_increment,
+  name varchar(256),
+  url varchar(256),
+  primary key (id)
 );
 
 drop table if exists term_instances;
 create table term_instances(
-  instance_id int not null auto_increment,
-  document_name varchar(256),
-  document_url varchar(256),
-  primary key (instance_id)
+  id int not null auto_increment,
+  term_id int,
+  instance_id int,
+  primary key (id)
+);
+
+drop table if exists related_terms;
+create table related_terms(
+  id int not null auto_increment,
+  master_term_id int,
+  other_term_id int,
+  primary key (id)
 );
