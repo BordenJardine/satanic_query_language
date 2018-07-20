@@ -31,7 +31,9 @@ end
 def process_row(row)
   access_note = create_access_notes(row)
   citation = create_citation(row)
+  instance = create_instance(row)
   term = create_term(row, access_note, citation)
+  term_instance = create_term_instance(term, instance)
 end
 
 def create_access_notes(row)
@@ -64,6 +66,23 @@ def create_citation(row)
   end
 end
 
+def create_instance(row)
+  url = row['Citation']
+  return unless url
+  name = url.split('/')[2]
+  attrs = {
+    url: url,
+    name: name,
+  }
+  instance = Instance.find_by(url: url)
+  if instance
+    instance.update_attributes(attrs)
+    return instance
+  else
+    return Instance.create(attrs)
+  end
+end
+
 def create_term(row, access_note, citation)
   term = Term.find_by(term: row['Term'])
   attrs = {
@@ -74,9 +93,15 @@ def create_term(row, access_note, citation)
   }
   if term
     term.update_attributes(attrs)
+    return term
   else
-    Term.create(attrs)
+    return Term.create(attrs)
   end
+end
+
+def create_term_instance(term, instance)
+  return unless term && instance
+  TermInstance.create(term:term, instance:instance)
 end
 
 def db_connect
