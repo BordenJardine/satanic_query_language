@@ -34,6 +34,7 @@ def process_row(row)
   instance = create_instance(row)
   term = create_term(row, access_note, citation)
   term_instance = create_term_instance(term, instance)
+  related_term = create_related_terms(term, row)
 end
 
 def create_access_notes(row)
@@ -102,6 +103,14 @@ end
 def create_term_instance(term, instance)
   return unless term && instance
   TermInstance.create(term:term, instance:instance)
+end
+
+def create_related_terms(term, row)
+  other_term = Term.find_by(term: row['Related Terms'])
+  return unless term && other_term
+  rt = RelatedTerm.find_by(master_term: term, other_term: other_term)
+  return rt if rt
+  RelatedTerm.create(master_term: term, other_term: other_term)
 end
 
 def db_connect
